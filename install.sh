@@ -4,11 +4,13 @@ set -euo pipefail
 # install.sh — One-line installer for codebase-memory-mcp.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
-#   curl -fsSL ... | bash -s -- --ui          # Install the UI variant
+#   curl -fsSL https://raw.githubusercontent.com/ch0udry/codebase-memory-mcp/android-vocabulary/install.sh | bash
+#   curl -fsSL ... | bash -s -- --ui          # Install the UI variant when release assets exist
 #   curl -fsSL ... | bash -s -- --dir /path   # Custom install directory
 #
 # Environment:
+#   CBM_REPO          Override GitHub repo (owner/name)
+#   CBM_BRANCH        Branch used for source fallback
 #   CBM_DOWNLOAD_URL  Override base URL for downloads (for testing)
 
 # Wrap in main() to prevent partial execution from piped downloads.
@@ -17,7 +19,8 @@ set -euo pipefail
 # called because the final line hasn't arrived yet.
 main() {
 
-REPO="DeusData/codebase-memory-mcp"
+REPO="${CBM_REPO:-ch0udry/codebase-memory-mcp}"
+BRANCH="${CBM_BRANCH:-android-vocabulary}"
 INSTALL_DIR="$HOME/.local/bin"
 VARIANT="standard"
 SKIP_CONFIG=false
@@ -116,13 +119,64 @@ DLDIR=$(mktemp -d)
 trap 'rm -rf "$DLDIR"' EXIT
 
 echo "Downloading ${ARCHIVE}..."
+download_ok=false
 if command -v curl &>/dev/null; then
-    curl -fSL --progress-bar -o "$DLDIR/$ARCHIVE" "$URL"
+    if curl -fSL --progress-bar -o "$DLDIR/$ARCHIVE" "$URL"; then
+        download_ok=true
+    fi
 elif command -v wget &>/dev/null; then
-    wget -q --show-progress -O "$DLDIR/$ARCHIVE" "$URL"
+    if wget -q --show-progress -O "$DLDIR/$ARCHIVE" "$URL"; then
+        download_ok=true
+    fi
 else
     echo "error: curl or wget required" >&2
     exit 1
+fi
+
+if [ "$download_ok" != true ]; then
+    echo "Release asset unavailable; building from source branch ${REPO}@${BRANCH}." >&2
+    echo "Requires Go 1.23+, git, and a C compiler." >&2
+
+    command -v git >/dev/null 2>&1 || { echo "error: git required for source fallback" >&2; exit 1; }
+    command -v go >/dev/null 2>&1 || { echo "error: Go 1.23+ required for source fallback" >&2; exit 1; }
+    if ! command -v cc >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
+        echo "error: C compiler required for source fallback" >&2
+        exit 1
+    fi
+
+    SRCDIR="$DLDIR/source"
+    git clone --depth=1 --branch "$BRANCH" "https://github.com/${REPO}.git" "$SRCDIR"
+    (cd "$SRCDIR" && scripts/build.sh)
+
+    mkdir -p "$INSTALL_DIR"
+    DEST="$INSTALL_DIR/codebase-memory-mcp"
+    cp "$SRCDIR/build/c/codebase-memory-mcp" "$DEST"
+    chmod 755 "$DEST"
+
+    VERSION=$("$DEST" --version 2>&1) || {
+        echo "error: installed source-built binary failed to run" >&2
+        exit 1
+    }
+    echo "Installed: $VERSION"
+
+    if [ "$SKIP_CONFIG" = true ]; then
+        echo "Skipping agent configuration (--skip-config)"
+    else
+        echo "Configuring coding agents..."
+        "$DEST" install -y 2>&1 || {
+            echo "Agent configuration failed (non-fatal)."
+            echo "Run manually: codebase-memory-mcp install"
+        }
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
+        echo "NOTE: $INSTALL_DIR is not in your PATH."
+        echo "Add it to your shell config:"
+        echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.zshrc"
+    fi
+
+    echo "Done! Restart your coding agent to start using codebase-memory-mcp."
+    exit 0
 fi
 
 # Checksum verification

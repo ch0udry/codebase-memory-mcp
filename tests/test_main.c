@@ -181,6 +181,7 @@ extern void suite_watcher(void);
 extern void suite_lz4(void);
 extern void suite_zstd(void);
 extern void suite_artifact(void);
+extern void suite_android_vocabulary(void);
 extern void suite_sqlite_writer(void);
 extern void suite_go_lsp(void);
 extern void suite_c_lsp(void);
@@ -336,6 +337,9 @@ int main(int argc, char **argv) {
 
     /* Persistent artifact export/import */
     RUN_SELECTED_SUITE(artifact);
+
+    /* Android APK/XAPK vocabulary registry */
+    RUN_SELECTED_SUITE(android_vocabulary);
 
     /* LSP resolvers */
     RUN_SELECTED_SUITE(scope);

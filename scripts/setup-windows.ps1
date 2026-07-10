@@ -9,7 +9,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$Repo = "DeusData/codebase-memory-mcp"
+$Repo = if ($env:CBM_REPO) { $env:CBM_REPO } else { "ch0udry/codebase-memory-mcp" }
+$Branch = if ($env:CBM_BRANCH) { $env:CBM_BRANCH } else { "android-vocabulary" }
 $BinaryName = "codebase-memory-mcp"
 $InstallDir = Join-Path $env:LOCALAPPDATA "codebase-memory-mcp"
 
@@ -202,10 +203,10 @@ if ($FromSource) {
     try {
         Invoke-WSL "test -d $sourceDir/.git" | Out-Null
         Write-Host "Updating source..." -ForegroundColor White
-        Invoke-WSL "git -C $sourceDir pull --ff-only"
+        Invoke-WSL "git -C $sourceDir fetch origin $Branch && git -C $sourceDir checkout $Branch && git -C $sourceDir pull --ff-only"
     } catch {
         Write-Host "Cloning repository..." -ForegroundColor White
-        Invoke-WSL "mkdir -p /home/$wslUser/.local/share && git clone https://github.com/$Repo.git $sourceDir"
+        Invoke-WSL "mkdir -p /home/$wslUser/.local/share && git clone --branch $Branch https://github.com/$Repo.git $sourceDir"
     }
     Write-Ok "Source at $sourceDir"
 

@@ -5,7 +5,8 @@ set -euo pipefail
 # Default: download pre-built binary from GitHub Release
 # --from-source: build from source (requires Go + C compiler)
 
-REPO="DeusData/codebase-memory-mcp"
+REPO="${CBM_REPO:-ch0udry/codebase-memory-mcp}"
+BRANCH="${CBM_BRANCH:-android-vocabulary}"
 INSTALL_DIR="$HOME/.local/bin"
 BINARY_NAME="codebase-memory-mcp"
 SOURCE_DIR="$HOME/.local/share/codebase-memory-mcp"
@@ -187,11 +188,11 @@ build_from_source() {
     echo ""
     if [ -d "$SOURCE_DIR/.git" ]; then
         echo "${BOLD}Updating source...${RESET}"
-        git -C "$SOURCE_DIR" pull --ff-only
+        git -C "$SOURCE_DIR" fetch origin "$BRANCH" && git -C "$SOURCE_DIR" checkout "$BRANCH" && git -C "$SOURCE_DIR" pull --ff-only
     else
         echo "${BOLD}Cloning repository...${RESET}"
         mkdir -p "$(dirname "$SOURCE_DIR")"
-        git clone "https://github.com/${REPO}.git" "$SOURCE_DIR"
+        git clone --branch "$BRANCH" "https://github.com/${REPO}.git" "$SOURCE_DIR"
     fi
     ok "Source at ${SOURCE_DIR}"
 
