@@ -182,6 +182,11 @@ extern void suite_lz4(void);
 extern void suite_zstd(void);
 extern void suite_artifact(void);
 extern void suite_android_vocabulary(void);
+extern void suite_android_graph(void);
+extern void suite_android_manifest(void);
+extern void suite_android_resources(void);
+extern void suite_android_pass(void);
+extern void suite_android_pipeline(void);
 extern void suite_sqlite_writer(void);
 extern void suite_go_lsp(void);
 extern void suite_c_lsp(void);
@@ -338,8 +343,13 @@ int main(int argc, char **argv) {
     /* Persistent artifact export/import */
     RUN_SELECTED_SUITE(artifact);
 
-    /* Android APK/XAPK vocabulary registry */
+    /* Android APK/XAPK semantic graph support */
     RUN_SELECTED_SUITE(android_vocabulary);
+    RUN_SELECTED_SUITE(android_graph);
+    RUN_SELECTED_SUITE(android_manifest);
+    RUN_SELECTED_SUITE(android_resources);
+    RUN_SELECTED_SUITE(android_pass);
+    RUN_SELECTED_SUITE(android_pipeline);
 
     /* LSP resolvers */
     RUN_SELECTED_SUITE(scope);

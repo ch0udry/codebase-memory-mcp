@@ -6,6 +6,8 @@ The purpose is to make already-extracted Android app projects queryable as a gra
 
 This vocabulary does not define an APK/XAPK unpacker, decompiler, dynamic analysis tool, malware verdict system, bypass system, or fixed directory layout. It only defines graph labels, edge types, properties, categories, and evidence conventions that fit the existing `codebase-memory-mcp` model of node labels, edge types, and JSON properties.
 
+For command examples after indexing an already-extracted Android folder, see [Android APK/XAPK query examples](android-apk-xapk-query-examples.md).
+
 ## Scope
 
 The Android vocabulary is for repositories or folders that may contain any mix of:
